@@ -12,6 +12,8 @@ class AStar:
         self.goal = goal
         self.open = []
         self.closed = []
+        self.max_row = len(map)
+        self.max_col = len(map[0])
 
 
     def create_map(self, map):
@@ -29,6 +31,43 @@ class AStar:
     def show_map(self):
         for key,value in self.map.items():
             print(f'{key}: {value.status}')
+
+    def get_neighbours(self, pos):
+        horizontal_moves = []
+        vertical_moves = []
+
+        neighbour_positions = []
+
+        # estimating horizontal neighbour to calculate
+        if pos[0] == 0:
+            horizontal_moves = [1]
+        elif pos[0] == self.max_row:
+            horizontal_moves = [-1]
+        else:
+            horizontal_moves = [1, -1]
+
+        # estimating vertical neighbour to calculate
+        if pos[1] == 0:
+            vertical_moves = [1]
+        elif pos[1] == self.max_row:
+            vertical_moves = [-1]
+        else:
+            vertical_moves = [1, -1]
+
+        # get horizontal neighbours
+        for position_change in horizontal_moves:
+            neighbour = pos.copy()
+            neighbour[0] = neighbour[0] + position_change
+            neighbour_positions.append(neighbour)
+
+        # get vertical neighbours
+        for position_change in vertical_moves:
+            neighbour = pos.copy()
+            neighbour[1] = neighbour[1] + position_change
+            neighbour_positions.append(neighbour)
+
+        # show the neighbours
+        print(neighbour_positions)
 
 class Node:
     """Node for the pathfinding algorithm"""
@@ -53,4 +92,5 @@ if __name__ == '__main__':
     goal_pos = [3,3]
 
     astar_finder = AStar(start_pos, goal_pos, map_matrix)
-    astar_finder.show_map()
+    # astar_finder.show_map()
+    astar_finder.get_neighbours([2,2])
