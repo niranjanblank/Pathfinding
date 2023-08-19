@@ -1,29 +1,35 @@
 class AStar:
     def __init__(self, start, goal, map):
-        self.map = self.create_grid(map)
+        """
+        self.map is a dictionary holding all the position and their respective nodes as key value pair
+        self.start is the start position
+        self.goal is the position where we want to reach
+        self.open is a list to store set of nodes to be evaluated
+        self.closed is a list to store set of nodes that are already evaluated
+        """
+        self.map = self.create_map(map)
         self.start = start
         self.goal = goal
+        self.open = []
+        self.closed = []
 
 
-    def create_grid(self, map):
-        grid = []
+    def create_map(self, map):
+        """ map position and their respective nodes are stored in dictionary for quick access"""
+        grid = {}
         rows = len(map)
         cols = len(map[0])
         for row in range(rows):
-            temp_node_list = []
             for col in range(cols):
-                temp_node_list.append(Node([row,col],map[row][col]))
+                node = Node([row,col],map[row][col])
+                grid[(row,col)] = node
 
-            grid.append(temp_node_list)
         return grid
 
     def show_map(self):
-        rows = len(self.map)
-        cols = len(self.map[0])
-        for row in range(rows):
-            for col in range(cols):
-                print(f'{self.map[row][col].pos} : {self.map[row][col].status}', end=",")
-            print()
+        for key,value in self.map.items():
+            print(f'{key}: {value.status}')
+
 class Node:
     """Node for the pathfinding algorithm"""
     def __init__(self, pos, status):
