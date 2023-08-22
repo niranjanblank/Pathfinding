@@ -114,6 +114,12 @@ class Node:
         distance = distance * 10
         self.h = int(distance)
 
+    def compute_f_value(self):
+        """
+        Compute f-value = g + h
+        """
+        self.f = self.g + self.h
+
 if __name__ == '__main__':
     map_matrix = [
         [1, 0, 0, 0, 1],
