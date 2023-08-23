@@ -12,7 +12,8 @@ class AStar:
         self.map = self.create_map(map)
         self.start = start
         self.goal = goal
-        self.open = []
+        # adding the starting square to open list
+        self.open = [self.start]
         self.closed = []
         self.max_row = len(map)-1
         self.max_col = len(map[0])-1
@@ -82,6 +83,37 @@ class AStar:
 
         return neighbour_positions
 
+    def run(self):
+
+        # loop to check inside open list
+        for node in self.open:
+            # finding the pos of node with lowest f cost
+            current_node_pos = self.find_lowest_node_from_open()
+            current_node = self.map[tuple(current_node_pos)]
+            current_node.compute_g_value(self.start)
+            current_node.compute_h_value(self.goal)
+            current_node.compute_f_value()
+
+            # removing from open list and switching it to closed list
+            self.closed.append(current_node_pos)
+            self.open.remove(current_node_pos)
+
+            # finding the neighbours for the current node
+            neighbour_list = self.get_neighbours(current_node.pos)
+            for neighbour in neighbour_list:
+                if neighbour not in self.open:
+                    self.open.append(neighbour)
+                    neighbour_node = self.map[tuple(neighbour)]
+                    neighbour_node.compute_g_value(self.start)
+                    neighbour_node.compute_h_value(self.goal)
+                    neighbour_node.compute_f_value()
+                    neighbour_node.parent = current_node.pos
+        print(self.open)
+
+
+    def find_lowest_node_from_open(self):
+        lowest_f_cost_pos = min(self.open, key=lambda item: self.map[tuple(item)].f)
+        return lowest_f_cost_pos
 class Node:
     """Node for the pathfinding algorithm"""
     """status = 0 means that path is not walkable """
@@ -90,6 +122,7 @@ class Node:
         self.g = None
         self.h = None
         self.f = None
+        self.parent = None
 
         # signifies if the node is obstacle or regular: 1 for regular, 0 for obstacle
         self.status = status
@@ -128,17 +161,14 @@ class Node:
 
 if __name__ == '__main__':
     map_matrix = [
-        [1, 0, 0, 0, 1],
+        [1, 1, 0, 0, 1],
         [1, 1, 0, 0, 1],
         [1, 0, 1, 1, 1],
-        [1, 0, 0, 0, 1],
+        [1, 0, 1, 1, 1],
     ]
     start_pos = [0,0]
-    goal_pos = [3,3]
+    goal_pos = [2,2]
 
     astar_finder = AStar(start_pos, goal_pos, map_matrix)
     # astar_finder.show_map()
-    print(astar_finder.get_neighbours([1,1]))
-
-    test_node = Node((1,1),1)
-    test_node.compute_h_value((4,4))
+    astar_finder.run()
