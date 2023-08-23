@@ -1,5 +1,6 @@
 from itertools import product
 import math
+from copy import deepcopy
 class AStar:
     def __init__(self, start, goal, map):
         """
@@ -17,7 +18,7 @@ class AStar:
         self.closed = []
         self.max_row = len(map)-1
         self.max_col = len(map[0])-1
-
+        self.path = []
 
     def create_map(self, map):
         """ map position and their respective nodes are stored in dictionary for quick access"""
@@ -84,13 +85,14 @@ class AStar:
         return neighbour_positions
 
     def run(self):
-
+        """Runs the AStar algorithm"""
         # loop to check inside open list
-        for node in self.open:
+        while True:
             # finding the pos of node with lowest f cost
             current_node_pos = self.find_lowest_node_from_open()
+            # getting the current node from the map
             current_node = self.map[tuple(current_node_pos)]
-            current_node.compute_g_value(self.start)
+            current_node.compute_g_value()
             current_node.compute_h_value(self.goal)
             current_node.compute_f_value()
 
@@ -100,16 +102,54 @@ class AStar:
 
             # finding the neighbours for the current node
             neighbour_list = self.get_neighbours(current_node.pos)
+            # looping through each neighbout
             for neighbour in neighbour_list:
+                #checking if the neighbour is in the closed list, it true then skip this neighbour
+                if neighbour in self.closed:
+                    continue
+
+                # checking if the neighbour is already in open list, if not then add it to open list and record f,g,h and make current node its parent node
                 if neighbour not in self.open:
                     self.open.append(neighbour)
                     neighbour_node = self.map[tuple(neighbour)]
-                    neighbour_node.compute_g_value(self.start)
+                    neighbour_node.parent = current_node
+                    neighbour_node.compute_g_value()
                     neighbour_node.compute_h_value(self.goal)
                     neighbour_node.compute_f_value()
-                    neighbour_node.parent = current_node.pos
-        print(self.open)
+                # if yes, check if current path has less g cost than previous
+                else:
+                    neighbour_node = self.map[tuple(neighbour)]
+                    temp_node = deepcopy(self.map[tuple(neighbour)])
+                    temp_node.parent = current_node
+                    temp_node.compute_g_value()
+                    # if current path has less g cost, then change the parent, and recalculate g and f scores
+                    if temp_node.g < neighbour_node.g:
+                        neighbour_node.parent = current_node
+                        neighbour_node.compute_g_value()
+                        neighbour_node.compute_f_value()
 
+            # if the target is in the closed list, then path is found
+            if self.goal in self.closed:
+                # getting the node at the goal
+                node = self.map[tuple(self.goal)]
+                # transversing from goal node to the start node through parent to get the shortest path
+                while True:
+                    # add the node pos to path list
+                    self.path.append(node.pos)
+                    node = node.parent
+                    # if we reach the start list, add it to the path and reverse the list
+                    if node.pos == self.start:
+                        self.path.append(self.start)
+                        self.path = self.path[::-1]
+                        break
+                break
+
+            # if open list is empty and path is not found till now, then there isnt any path
+            if not self.open:
+                break
+
+        # return the path
+        return self.path
 
     def find_lowest_node_from_open(self):
         lowest_f_cost_pos = min(self.open, key=lambda item: self.map[tuple(item)].f)
@@ -122,6 +162,7 @@ class Node:
         self.g = None
         self.h = None
         self.f = None
+        # self.parent is the position of parent
         self.parent = None
 
         # signifies if the node is obstacle or regular: 1 for regular, 0 for obstacle
@@ -135,14 +176,16 @@ class Node:
         distance = math.sqrt((point2[0]-point1[0])**2 + (point2[1]-point1[1])**2)
         distance = round(distance,1)
         return distance
-    def compute_g_value(self, start_node_pos):
+    def compute_g_value(self):
         """
         G value is the distance from the node to the start node
         """
-        distance = self.euclidean_distance(self.pos, start_node_pos)
-        # multiplying with 10 to get whole number, which is faster for computer to work on
-        distance = distance * 10
-        self.g = int(distance)
+
+        if self.parent:
+            self.g = self.parent.g + int(self.euclidean_distance(self.pos, self.parent.pos)*10)
+        else:
+            self.g = 0
+
 
     def compute_h_value(self, goal_node_pos):
         """
@@ -166,9 +209,13 @@ if __name__ == '__main__':
         [1, 0, 1, 1, 1],
         [1, 0, 1, 1, 1],
     ]
-    start_pos = [0,0]
-    goal_pos = [2,2]
+    start_pos = [3,0]
+    goal_pos = [0,4]
 
     astar_finder = AStar(start_pos, goal_pos, map_matrix)
-    # astar_finder.show_map()
-    astar_finder.run()
+
+    shortest_path = astar_finder.run()
+    if shortest_path:
+        print(shortest_path)
+    else:
+        print('path not found: destination is unreachable')
