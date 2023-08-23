@@ -59,26 +59,32 @@ class AStar:
         for position_change in horizontal_moves:
             neighbour = pos.copy()
             neighbour[0] = neighbour[0] + position_change
-            neighbour_positions.append(neighbour)
+            node = self.map[tuple(neighbour)]
+            if node.status != 0:
+                neighbour_positions.append(neighbour)
 
         # get vertical neighbours
         for position_change in vertical_moves:
             neighbour = pos.copy()
             neighbour[1] = neighbour[1] + position_change
-            neighbour_positions.append(neighbour)
+            node = self.map[tuple(neighbour)]
+            if node.status != 0:
+                neighbour_positions.append(neighbour)
 
         # get diagonal neighbours
         for position_change in diagonal_moves:
             neighbour = pos.copy()
             neighbour[0] = neighbour[0] + position_change[0]
             neighbour[1] = neighbour[1] + position_change[1]
-            neighbour_positions.append(neighbour)
+            node = self.map[tuple(neighbour)]
+            if node.status != 0:
+                neighbour_positions.append(neighbour)
 
-        # # show the neighbours
-        # print(neighbour_positions)
+        return neighbour_positions
 
 class Node:
     """Node for the pathfinding algorithm"""
+    """status = 0 means that path is not walkable """
     def __init__(self, pos, status):
         self.pos = pos
         self.g = None
@@ -132,7 +138,7 @@ if __name__ == '__main__':
 
     astar_finder = AStar(start_pos, goal_pos, map_matrix)
     # astar_finder.show_map()
-    astar_finder.get_neighbours([3,4])
+    print(astar_finder.get_neighbours([1,1]))
 
     test_node = Node((1,1),1)
     test_node.compute_h_value((4,4))
