@@ -1,6 +1,8 @@
 from itertools import product
 import math
 from copy import deepcopy
+
+
 class AStar:
     def __init__(self, start, goal, map):
         """
@@ -16,8 +18,8 @@ class AStar:
         # adding the starting square to open list
         self.open = [self.start]
         self.closed = []
-        self.max_row = len(map)-1
-        self.max_col = len(map[0])-1
+        self.max_row = len(map) - 1
+        self.max_col = len(map[0]) - 1
         self.path = []
 
     def create_map(self, map):
@@ -27,13 +29,13 @@ class AStar:
         cols = len(map[0])
         for row in range(rows):
             for col in range(cols):
-                node = Node([row,col],map[row][col])
-                grid[(row,col)] = node
+                node = Node([row, col], map[row][col])
+                grid[(row, col)] = node
 
         return grid
 
     def show_map(self):
-        for key,value in self.map.items():
+        for key, value in self.map.items():
             print(f'{key}: {value.status}')
 
     def get_neighbours(self, pos):
@@ -89,6 +91,7 @@ class AStar:
         # loop to check inside open list
         while True:
             # finding the pos of node with lowest f cost
+            # this will return the goal node when there isnt any other item in self.open list at the beginning
             current_node_pos = self.find_lowest_node_from_open()
             # getting the current node from the map
             current_node = self.map[tuple(current_node_pos)]
@@ -104,7 +107,7 @@ class AStar:
             neighbour_list = self.get_neighbours(current_node.pos)
             # looping through each neighbout
             for neighbour in neighbour_list:
-                #checking if the neighbour is in the closed list, it true then skip this neighbour
+                # checking if the neighbour is in the closed list, it true then skip this neighbour
                 if neighbour in self.closed:
                     continue
 
@@ -154,9 +157,12 @@ class AStar:
     def find_lowest_node_from_open(self):
         lowest_f_cost_pos = min(self.open, key=lambda item: self.map[tuple(item)].f)
         return lowest_f_cost_pos
+
+
 class Node:
     """Node for the pathfinding algorithm"""
     """status = 0 means that path is not walkable """
+
     def __init__(self, pos, status):
         self.pos = pos
         self.g = None
@@ -173,19 +179,19 @@ class Node:
         Method to calculate distance between two points, which will be used to calculate
         g and h values
         """
-        distance = math.sqrt((point2[0]-point1[0])**2 + (point2[1]-point1[1])**2)
-        distance = round(distance,1)
+        distance = math.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
+        distance = round(distance, 1)
         return distance
+
     def compute_g_value(self):
         """
         G value is the distance from the node to the start node
         """
 
         if self.parent:
-            self.g = self.parent.g + int(self.euclidean_distance(self.pos, self.parent.pos)*10)
+            self.g = self.parent.g + int(self.euclidean_distance(self.pos, self.parent.pos) * 10)
         else:
             self.g = 0
-
 
     def compute_h_value(self, goal_node_pos):
         """
@@ -202,6 +208,7 @@ class Node:
         """
         self.f = self.g + self.h
 
+
 if __name__ == '__main__':
     map_matrix = [
         [1, 1, 0, 0, 1],
@@ -209,8 +216,8 @@ if __name__ == '__main__':
         [1, 0, 1, 1, 1],
         [1, 0, 1, 1, 1],
     ]
-    start_pos = [3,0]
-    goal_pos = [0,4]
+    start_pos = [3, 0]
+    goal_pos = [0, 4]
 
     astar_finder = AStar(start_pos, goal_pos, map_matrix)
 
