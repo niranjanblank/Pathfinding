@@ -1,5 +1,6 @@
 from itertools import product
 import math
+import heapq
 
 class AStar:
     def __init__(self, start, goal, map):
@@ -10,17 +11,24 @@ class AStar:
         self.open is a list to store set of nodes to be evaluated
         self.closed is a list to store set of nodes that are already evaluated
         """
-        self.map = self.create_map(map)
+        self.open = []
+        self.closed = []
+
+        # this is a priority queue which will be used to find the node with smallest f value
+        self.open_queue = []
+
+        heapq.heapify(self.open_queue)
+        # heapq.heapify(self.closed_heap)
+        self.map = self.create_map(map, start, goal)
         self.start = start
         self.goal = goal
         # adding the starting square to open list
-        self.open = [self.start]
-        self.closed = []
+
         self.max_row = len(map) - 1
         self.max_col = len(map[0]) - 1
         self.path = []
 
-    def create_map(self, map):
+    def create_map(self, map, start, goal):
         """ map position and their respective nodes are stored in dictionary for quick access"""
         grid = {}
         rows = len(map)
@@ -28,7 +36,14 @@ class AStar:
         for row in range(rows):
             for col in range(cols):
                 node = Node([row, col], map[row][col])
+                if (row, col) == tuple(start):
+                    node.compute_g_value()
+                    node.compute_h_value(goal)
+                    node.compute_f_value()
+                    heapq.heappush(self.open_queue, (node.f, start))
+                    self.open.append(start)
                 grid[(row, col)] = node
+
 
         return grid
 
@@ -88,9 +103,8 @@ class AStar:
         """Runs the AStar algorithm"""
         # loop to check inside open list
         while True:
-            # finding the pos of node with lowest f cost
-            # this will return the goal node when there isnt any other item in self.open list at the beginning
-            current_node_pos = self.find_lowest_node_from_open()
+            # finding the pos of node with lowest f cost with the help of priority queue
+            current_node_pos = heapq.heappop(self.open_queue)[1]
             # getting the current node from the map
             current_node = self.map[tuple(current_node_pos)]
             current_node.compute_g_value()
@@ -98,6 +112,7 @@ class AStar:
             current_node.compute_f_value()
 
             # removing from open list and switching it to closed list
+
             self.closed.append(current_node_pos)
             self.open.remove(current_node_pos)
 
@@ -117,12 +132,12 @@ class AStar:
                     neighbour_node.compute_g_value()
                     neighbour_node.compute_h_value(self.goal)
                     neighbour_node.compute_f_value()
+                    heapq.heappush(self.open_queue,(neighbour_node.f,neighbour))
                 # if yes, check if current path has less g cost than previous
                 else:
                     neighbour_node = self.map[tuple(neighbour)]
                     old_g = neighbour_node.g
                     old_parent = neighbour_node.parent
-                    # temp_node = deepcopy(self.map[tuple(neighbour)])
                     neighbour_node.parent = current_node
                     neighbour_node.compute_g_value()
                     # if current path has less g cost, then change the parent, and recalculate g and f scores
@@ -155,10 +170,6 @@ class AStar:
 
         # return the path
         return self.path
-
-    def find_lowest_node_from_open(self):
-        lowest_f_cost_pos = min(self.open, key=lambda item: self.map[tuple(item)].f)
-        return lowest_f_cost_pos
 
 
 class Node:
