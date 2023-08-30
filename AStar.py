@@ -1,7 +1,5 @@
 from itertools import product
 import math
-from copy import deepcopy
-
 
 class AStar:
     def __init__(self, start, goal, map):
@@ -122,14 +120,18 @@ class AStar:
                 # if yes, check if current path has less g cost than previous
                 else:
                     neighbour_node = self.map[tuple(neighbour)]
-                    temp_node = deepcopy(self.map[tuple(neighbour)])
-                    temp_node.parent = current_node
-                    temp_node.compute_g_value()
+                    old_g = neighbour_node.g
+                    old_parent = neighbour_node.parent
+                    # temp_node = deepcopy(self.map[tuple(neighbour)])
+                    neighbour_node.parent = current_node
+                    neighbour_node.compute_g_value()
                     # if current path has less g cost, then change the parent, and recalculate g and f scores
-                    if temp_node.g < neighbour_node.g:
-                        neighbour_node.parent = current_node
-                        neighbour_node.compute_g_value()
+                    if neighbour_node.g < old_g:
                         neighbour_node.compute_f_value()
+                    else:
+                        neighbour_node.g = old_g
+                        neighbour_node.parent = old_parent
+
 
             # if the target is in the closed list, then path is found
             if self.goal in self.closed:
