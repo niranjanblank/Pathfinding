@@ -2,6 +2,7 @@ from itertools import product
 import math
 import heapq
 
+
 class AStar:
     def __init__(self, start, goal, map):
         """
@@ -44,59 +45,66 @@ class AStar:
                     self.open.append(start)
                 grid[(row, col)] = node
 
-
         return grid
 
     def show_map(self):
         for key, value in self.map.items():
             print(f'{key}: {value.status}')
 
+    def get_horizontal_or_vertical_moves(self, pos, pos_value, max_value):
+        """
+        gets valid horizontal or vertical moves
+        pos_value = 0 for horizontal and 1 for vertical
+        max_valye = maximum row(for horizontal) or maximum col(for vertical)
+        """
+        if pos[pos_value] == 0:
+            moves = [1]
+        elif pos[pos_value] == max_value:
+            moves = [-1]
+        else:
+            moves = [1, -1]
+        return moves
+
+    def get_neighbour_positions(self, type,  pos, moves):
+        """
+        Gets the valid(walkable) neighbour positions from the provided moves
+        type = tpye of move, either horizontal, vertical or diagonal
+        """
+        positions = []
+        for position_change in moves:
+            neighbour = pos.copy()
+            if type== "horizontal" :
+                neighbour[0] = neighbour[0] + position_change
+            if type == "vertical" :
+                neighbour[1] = neighbour[1] + position_change
+            if type == "diagonal":
+                neighbour[0] = neighbour[0] + position_change[0]
+                neighbour[1] = neighbour[1] + position_change[1]
+            node = self.map[tuple(neighbour)]
+            if node.status != 0:
+                positions.append(neighbour)
+        return positions
     def get_neighbours(self, pos):
         neighbour_positions = []
 
         # estimating horizontal neighbour to calculate
-        if pos[0] == 0:
-            horizontal_moves = [1]
-        elif pos[0] == self.max_row:
-            horizontal_moves = [-1]
-        else:
-            horizontal_moves = [1, -1]
+        horizontal_moves = self.get_horizontal_or_vertical_moves(pos, 0, self.max_row)
 
         # estimating vertical neighbour to calculate
-        if pos[1] == 0:
-            vertical_moves = [1]
-        elif pos[1] == self.max_col:
-            vertical_moves = [-1]
-        else:
-            vertical_moves = [1, -1]
+        vertical_moves = self.get_horizontal_or_vertical_moves(pos, 1, self.max_col)
 
         # estimating diagonal neighbour to calculate
         diagonal_moves = list(product(horizontal_moves, vertical_moves))
         # get horizontal neighbours
-        for position_change in horizontal_moves:
-            neighbour = pos.copy()
-            neighbour[0] = neighbour[0] + position_change
-            node = self.map[tuple(neighbour)]
-            if node.status != 0:
-                neighbour_positions.append(neighbour)
+        horizontal_neighbours = self.get_neighbour_positions(type="horizontal", pos=pos, moves=horizontal_moves )
 
         # get vertical neighbours
-        for position_change in vertical_moves:
-            neighbour = pos.copy()
-            neighbour[1] = neighbour[1] + position_change
-            node = self.map[tuple(neighbour)]
-            if node.status != 0:
-                neighbour_positions.append(neighbour)
+        vertical_neighbours = self.get_neighbour_positions(type="vertical", pos=pos, moves=vertical_moves)
 
         # get diagonal neighbours
-        for position_change in diagonal_moves:
-            neighbour = pos.copy()
-            neighbour[0] = neighbour[0] + position_change[0]
-            neighbour[1] = neighbour[1] + position_change[1]
-            node = self.map[tuple(neighbour)]
-            if node.status != 0:
-                neighbour_positions.append(neighbour)
+        diagonal_neighbours = self.get_neighbour_positions(type="diagonal", pos=pos, moves=diagonal_moves)
 
+        neighbour_positions.extend(horizontal_neighbours+vertical_neighbours+diagonal_neighbours)
         return neighbour_positions
 
     def run(self):
@@ -132,7 +140,7 @@ class AStar:
                     neighbour_node.compute_g_value()
                     neighbour_node.compute_h_value(self.goal)
                     neighbour_node.compute_f_value()
-                    heapq.heappush(self.open_queue,(neighbour_node.f,neighbour))
+                    heapq.heappush(self.open_queue, (neighbour_node.f, neighbour))
                 # if yes, check if current path has less g cost than previous
                 else:
                     neighbour_node = self.map[tuple(neighbour)]
@@ -146,7 +154,6 @@ class AStar:
                     else:
                         neighbour_node.g = old_g
                         neighbour_node.parent = old_parent
-
 
             # if the target is in the closed list, then path is found
             if self.goal in self.closed:
@@ -220,6 +227,3 @@ class Node:
         Compute f-value = g + h
         """
         self.f = self.g + self.h
-
-
-
