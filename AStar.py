@@ -4,23 +4,27 @@ import heapq
 
 
 class AStar:
+    """
+    Astar algorithm implementation
+    """
+
     def __init__(self, start, goal, map):
         """
-        self.map is a dictionary holding all the position and their respective nodes as key value pair
+        self.grid_map is a dictionary holding all the position and their respective nodes as key value pair
         self.start is the start position
         self.goal is the position where we want to reach
         self.open is a list to store set of nodes to be evaluated
         self.closed is a list to store set of nodes that are already evaluated
         """
-        self.open = []
-        self.closed = []
+        self.open = set()
+        self.closed = set()
 
         # this is a priority queue which will be used to find the node with smallest f value
         self.open_queue = []
 
         heapq.heapify(self.open_queue)
         # heapq.heapify(self.closed_heap)
-        self.map = self.create_map(map, start, goal)
+        self.grid_map = self.create_map(map, start, goal)
         self.start = start
         self.goal = goal
         # adding the starting square to open list
@@ -36,19 +40,19 @@ class AStar:
         cols = len(map[0])
         for row in range(rows):
             for col in range(cols):
-                node = Node([row, col], map[row][col])
+                node = Node((row, col), map[row][col])
                 if (row, col) == tuple(start):
                     node.compute_g_value()
                     node.compute_h_value(goal)
                     node.compute_f_value()
                     heapq.heappush(self.open_queue, (node.f, start))
-                    self.open.append(start)
+                    self.open.add(start)
                 grid[(row, col)] = node
 
         return grid
 
     def show_map(self):
-        for key, value in self.map.items():
+        for key, value in self.grid_map.items():
             print(f'{key}: {value.status}')
 
     def get_horizontal_or_vertical_moves(self, pos, pos_value, max_value):
@@ -65,25 +69,26 @@ class AStar:
             moves = [1, -1]
         return moves
 
-    def get_neighbour_positions(self, type,  pos, moves):
+    def get_neighbour_positions(self, type, pos, moves):
         """
         Gets the valid(walkable) neighbour positions from the provided moves
         type = tpye of move, either horizontal, vertical or diagonal
         """
         positions = []
         for position_change in moves:
-            neighbour = pos.copy()
-            if type== "horizontal" :
+            neighbour = list(pos)
+            if type == "horizontal":
                 neighbour[0] = neighbour[0] + position_change
-            if type == "vertical" :
+            if type == "vertical":
                 neighbour[1] = neighbour[1] + position_change
             if type == "diagonal":
                 neighbour[0] = neighbour[0] + position_change[0]
                 neighbour[1] = neighbour[1] + position_change[1]
-            node = self.map[tuple(neighbour)]
+            node = self.grid_map[tuple(neighbour)]
             if node.status != 0:
-                positions.append(neighbour)
+                positions.append(tuple(neighbour))
         return positions
+
     def get_neighbours(self, pos):
         neighbour_positions = []
 
@@ -96,7 +101,7 @@ class AStar:
         # estimating diagonal neighbour to calculate
         diagonal_moves = list(product(horizontal_moves, vertical_moves))
         # get horizontal neighbours
-        horizontal_neighbours = self.get_neighbour_positions(type="horizontal", pos=pos, moves=horizontal_moves )
+        horizontal_neighbours = self.get_neighbour_positions(type="horizontal", pos=pos, moves=horizontal_moves)
 
         # get vertical neighbours
         vertical_neighbours = self.get_neighbour_positions(type="vertical", pos=pos, moves=vertical_moves)
@@ -104,7 +109,8 @@ class AStar:
         # get diagonal neighbours
         diagonal_neighbours = self.get_neighbour_positions(type="diagonal", pos=pos, moves=diagonal_moves)
 
-        neighbour_positions.extend(horizontal_neighbours+vertical_neighbours+diagonal_neighbours)
+        neighbour_positions.extend(horizontal_neighbours + vertical_neighbours + diagonal_neighbours)
+
         return neighbour_positions
 
     def run(self):
@@ -114,19 +120,19 @@ class AStar:
             # finding the pos of node with lowest f cost with the help of priority queue
             current_node_pos = heapq.heappop(self.open_queue)[1]
             # getting the current node from the map
-            current_node = self.map[tuple(current_node_pos)]
+            current_node = self.grid_map[tuple(current_node_pos)]
             current_node.compute_g_value()
             current_node.compute_h_value(self.goal)
             current_node.compute_f_value()
 
             # removing from open list and switching it to closed list
 
-            self.closed.append(current_node_pos)
+            self.closed.add(current_node_pos)
             self.open.remove(current_node_pos)
 
             # finding the neighbours for the current node
             neighbour_list = self.get_neighbours(current_node.pos)
-            # looping through each neighbout
+            # looping through each neighbour
             for neighbour in neighbour_list:
                 # checking if the neighbour is in the closed list, it true then skip this neighbour
                 if neighbour in self.closed:
@@ -134,8 +140,8 @@ class AStar:
 
                 # checking if the neighbour is already in open list, if not then add it to open list and record f,g,h and make current node its parent node
                 if neighbour not in self.open:
-                    self.open.append(neighbour)
-                    neighbour_node = self.map[tuple(neighbour)]
+                    self.open.add(neighbour)
+                    neighbour_node = self.grid_map[tuple(neighbour)]
                     neighbour_node.parent = current_node
                     neighbour_node.compute_g_value()
                     neighbour_node.compute_h_value(self.goal)
@@ -143,7 +149,7 @@ class AStar:
                     heapq.heappush(self.open_queue, (neighbour_node.f, neighbour))
                 # if yes, check if current path has less g cost than previous
                 else:
-                    neighbour_node = self.map[tuple(neighbour)]
+                    neighbour_node = self.grid_map[tuple(neighbour)]
                     old_g = neighbour_node.g
                     old_parent = neighbour_node.parent
                     neighbour_node.parent = current_node
@@ -158,7 +164,7 @@ class AStar:
             # if the target is in the closed list, then path is found
             if self.goal in self.closed:
                 # getting the node at the goal
-                node = self.map[tuple(self.goal)]
+                node = self.grid_map[tuple(self.goal)]
                 # transversing from goal node to the start node through parent to get the shortest path
                 while True:
                     # add the node pos to path list
@@ -181,9 +187,13 @@ class AStar:
 
 class Node:
     """Node for the pathfinding algorithm"""
-    """status = 0 means that path is not walkable """
 
     def __init__(self, pos, status):
+        """
+        status = 0 means that path is not walkable, 1 means that path is walkable
+        pos = position of node in map
+        """
+
         self.pos = pos
         self.g = None
         self.h = None
@@ -194,7 +204,8 @@ class Node:
         # signifies if the node is obstacle or regular: 1 for regular, 0 for obstacle
         self.status = status
 
-    def euclidean_distance(self, point1, point2):
+    @staticmethod
+    def euclidean_distance(point1, point2):
         """
         Method to calculate distance between two points, which will be used to calculate
         g and h values

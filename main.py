@@ -7,8 +7,8 @@ if __name__ == '__main__':
         [1, 0, 1, 1, 1],
         [1, 0, 1, 1, 1],
     ]
-    start_pos = [3, 0]
-    goal_pos = [0, 4]
+    start_pos = (3, 0)
+    goal_pos = (0, 4)
 
     astar_finder = AStar(start_pos, goal_pos, map_matrix)
 
